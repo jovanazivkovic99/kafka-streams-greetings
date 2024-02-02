@@ -5,6 +5,7 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.Printed;
 import org.apache.kafka.streams.kstream.Produced;
 
 public class GreetingsTopology {
@@ -26,10 +27,15 @@ public class GreetingsTopology {
         KStream<String, String> greetingsStream = streamsBuilder
                 .stream(GREETINGS, Consumed.with(Serdes.String(), Serdes.String()));
         
+        greetingsStream.print(Printed.<String, String>toSysOut().withLabel("greetingsStream"));
+        
         // pretvaramo iz lowercase u uppercase
         // mapValues() dace nam pristup vrednosti iz kafka topika koji smo konsumovali
         KStream<String, String> modifiedStream = greetingsStream
                 .mapValues((readOnlyKey, value) -> value.toUpperCase());
+        
+        modifiedStream.print(Printed.<String, String>toSysOut().withLabel("modifiedStream"));
+        
         
         // publish value to topic
         // u pozadini koristi ProducerAPI
