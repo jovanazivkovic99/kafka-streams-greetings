@@ -8,37 +8,46 @@ import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Printed;
 import org.apache.kafka.streams.kstream.Produced;
 
+/**
+ * The `GreetingsTopology` class is used for creating a topology for processing Kafka streams. This class defines the
+ * flow from an input to an output topic, transforming messages from one form to another.
+ */
 public class GreetingsTopology {
     
-    // source topic
+    // Input topic
     public static String GREETINGS = "greetings";
-    // destination topic
+    // Output topic
     public static String GREETINGS_UPPERCASE = "greetings_uppercase";
     
-    // Topology je klasa u kafka streamu koji ima citav flow kafka streama
+    /**
+     * Method to build the Kafka Stream topology.
+     *
+     * @return Topology Object representing the defined stream processing topology.
+     */
     public static Topology buildTopology () {
-        // definisemo uz pomoc njega soruce processor, stream processing logc and
-        // sync processor
+       /* With StreamBuilder we define source processor, stream processing logic
+        and sync processor*/
         StreamsBuilder streamsBuilder = new StreamsBuilder();
         
-        // source processor
-        // u kafka stream api serializer i deserializer se kategorise kao Serdes
-        // u pozadini ovo koristi ConsumerAPI
+        /*Definition of the input stream
+        - u KafkaStreamsAPI serializer i deserializer se kategorise kao Serdes
+        - u pozadini ovo koristi ConsumerAPI*/
         KStream<String, String> greetingsStream = streamsBuilder
                 .stream(GREETINGS, Consumed.with(Serdes.String(), Serdes.String()));
         
+        // Logging the input stream.
         greetingsStream.print(Printed.<String, String>toSysOut().withLabel("greetingsStream"));
         
-        // pretvaramo iz lowercase u uppercase
-        // mapValues() dace nam pristup vrednosti iz kafka topika koji smo konsumovali
+        /*Transforming messages to uppercase.
+        mapValues() gives us values from kafka topic that we consumed*/
         KStream<String, String> modifiedStream = greetingsStream
                 .mapValues((readOnlyKey, value) -> value.toUpperCase());
         
+        // Logging the transformed stream.
         modifiedStream.print(Printed.<String, String>toSysOut().withLabel("modifiedStream"));
         
-        
-        // publish value to topic
-        // u pozadini koristi ProducerAPI
+        /*Publishing messages to the output topic.
+        u pozadini koristi ProducerAPI*/
         modifiedStream
                 .to(GREETINGS_UPPERCASE, Produced.with(Serdes.String(), Serdes.String()));
         
